@@ -1199,7 +1199,6 @@ dependencies = [
  "sqlx",
  "time",
  "tokio",
- "tower",
 ]
 
 [[package]]
