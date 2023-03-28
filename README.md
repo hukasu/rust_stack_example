@@ -21,9 +21,9 @@ docker compose up
 After the stack is up and running, it should be possible to check the status of the containers using `docker ps -a`. The output should look something like:
 ```
 $> docker ps -a
-CONTAINER ID   IMAGE                   COMMAND                  CREATED              STATUS              PORTS                    NAMES
-0fbefea99317   python_assignment-api   "waitress-serve --ca…"   About a minute ago   Up About a minute   0.0.0.0:8080->8080/tcp   rust_stack_example-api-1
-5595c8ac7420   postgres:alpine         "docker-entrypoint.s…"   About an hour ago    Up About a minute   5432/tcp                 rust_stack_example-postgres-1
+CONTAINER ID   IMAGE                         COMMAND                  CREATED         STATUS         PORTS                    NAMES
+0649225aff88   rust_stack_example-api        "financial_data"         7 minutes ago   Up 7 seconds   0.0.0.0:8080->8000/tcp   rust_stack_example-api-1
+6323931677a2   postgres:alpine               "docker-entrypoint.s…"   4 days ago      Up 7 seconds   5432/tcp                 rust_stack_example-postgres-1
 ```
 
 ## Initialization
