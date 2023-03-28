@@ -1,0 +1,25 @@
+[package]
+name = "rust_stack_example"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+log = "0.4.17"
+pretty_env_logger = "0.4.0"
+error-stack = "0.3.1"
+axum = "0.6.12"
+axum-sqlx-tx = { version = "0.5.0", features = ["postgres"]}
+tower = "0.4.13"
+tokio = { version = "1.26.0", features=["rt-multi-thread", "macros"] }
+sqlx = { version = "0.6.3", features = ["runtime-tokio-rustls", "postgres", "time"] }
+time = { version = "0.3.20", features = ["serde-human-readable"] }
+serde = { version = "1.0.158", features = ["derive"] }
+serde_json = "1.0.94"
+reqwest = { version = "0.11.15", features = ["blocking", "json"] }
+csv = "1.2.1"
+
+[profile.release-lto]
+inherits = "release"
+lto = true
