@@ -16,7 +16,8 @@ async fn run_server() -> Result<(), ServerError> {
         .attach("Environment variable `ALPHA_VANTAGE_API_KEY` is not set")?;
 
     log::trace!("Connecting to database");
-    let pool = tasks::connect_to_database(&database_url).await?;
+    let pool = tasks::connect_to_database(&database_url).await
+        .change_context(ServerError)?;
 
     log::trace!("Creating table");
     tasks::create_table_if_not_exists(pool.clone()).await
@@ -44,6 +45,7 @@ async fn run_server() -> Result<(), ServerError> {
         .into_report()
         .change_context(ServerError)
         .attach("Failed to join Upsert task.")?
+        .change_context(ServerError)
 }
 
 fn main() -> Result<(), ServerError> {

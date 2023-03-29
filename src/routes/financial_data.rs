@@ -1,7 +1,7 @@
 use axum::{Json, extract::Query};
 use error_stack::{IntoReport, ResultExt};
 
-use crate::{model::{FinancialDataResponse, FinancialDataReport, FinancialDataQuery, Pagination, ResponseInfo}, error::{ServerError, ResponseError}};
+use crate::{model::{FinancialDataResponse, FinancialDataReport, FinancialDataQuery, Pagination, ResponseInfo}, error::{ResponseError, RouteError}};
 
 /// `financial_data` endpoint.  
 /// 
@@ -18,7 +18,7 @@ use crate::{model::{FinancialDataResponse, FinancialDataReport, FinancialDataQue
 pub async fn financial_data(
     mut db: axum_sqlx_tx::Tx<sqlx::Postgres>,
     Query(query): Query<FinancialDataQuery>
-) -> Result<Json<FinancialDataResponse>, ResponseError<ServerError>> {
+) -> Result<Json<FinancialDataResponse>, ResponseError<RouteError>> {
     log::trace!("Received request to `financial_data`.");
 
     let query_str = 
@@ -36,7 +36,7 @@ pub async fn financial_data(
         .bind(query.end_date)
         .fetch_all(&mut db)
         .await.into_report()
-        .change_context(ServerError)
+        .change_context(RouteError("financial_data"))
         .attach("Failed to query financial data on PostgreSQL database.")?;
 
     log::trace!("Setting up variables for filtering.");

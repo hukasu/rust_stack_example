@@ -2,7 +2,7 @@ use error_stack::{IntoReport, ResultExt, Result};
 use serde::Deserialize;
 use tokio::sync::oneshot::Receiver;
 
-use crate::{model::FinancialDataReport, error::GetRawDataError};
+use crate::{model::FinancialDataReport, error::DatabaseUpsertError};
 
 /// Generates a placeholder value for the `symbol` value for the `RawFinancialDataReport` struct.
 fn default_resource() -> String {
@@ -34,18 +34,18 @@ impl From<RawFinancialDataReport> for FinancialDataReport {
 }
 
 /// Queries the Alpha Vantange API for a given global equity.
-async fn query_alpha_vantage(api_key: &str, symbol: &str) -> Result<Vec<FinancialDataReport>, GetRawDataError> {
+async fn query_alpha_vantage(api_key: &str, symbol: &str) -> Result<Vec<FinancialDataReport>, DatabaseUpsertError> {
     log::trace!("Requesting data from Alpha Vantage API for `{}` in CSV format.", symbol);
     let resp = reqwest::get(
         format!("https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&apikey={}&symbol={}&datatype=csv", api_key, symbol)
     ).await
         .into_report()
-        .change_context(GetRawDataError::AlphaVantageQuery)
+        .change_context(DatabaseUpsertError)
         .attach("Failed to query Alpha Vantage API.")?;
     log::trace!("Extracting text from response body.");
     let text = resp.text().await
         .into_report()
-        .change_context(GetRawDataError::AlphaVantageQuery)
+        .change_context(DatabaseUpsertError)
         .attach("Failed to read Alpha Vantage API query response body.")?;
     log::trace!("Create CSV reader.");
     let mut csv = csv::Reader::from_reader(text.as_bytes());
@@ -72,12 +72,12 @@ async fn query_alpha_vantage(api_key: &str, symbol: &str) -> Result<Vec<Financia
         )
         .collect::<std::result::Result<Vec<FinancialDataReport>, csv::Error>>()
         .into_report()
-        .change_context(GetRawDataError::AlphaVantageQuery)
+        .change_context(DatabaseUpsertError)
         .attach("Failed to process Alpha Vantage API response.")
 }
 
 /// Upserts `FinancialDataReport` into database.
-async fn upsert_in_database(pool: sqlx::PgPool, rows: Vec<FinancialDataReport>) -> Result<(), GetRawDataError> {
+async fn upsert_in_database(pool: sqlx::PgPool, rows: Vec<FinancialDataReport>) -> Result<(), DatabaseUpsertError> {
     let query = r#"
     INSERT INTO financial_data (symbol, date, open_price, close_price, volume)
     VALUES ($1, $2, $3, $4, $5)
@@ -87,7 +87,7 @@ async fn upsert_in_database(pool: sqlx::PgPool, rows: Vec<FinancialDataReport>) 
     log::trace!("Initializing upsert transaction.");
     let mut trans = pool.begin().await
         .into_report()
-        .change_context(GetRawDataError::DatavaseUpsert)
+        .change_context(DatabaseUpsertError)
         .attach("Failed to create transaction on Postgres database.")?;
     
     log::trace!("Upserting each value from the Alpha Vantage API query into the database.");
@@ -100,7 +100,7 @@ async fn upsert_in_database(pool: sqlx::PgPool, rows: Vec<FinancialDataReport>) 
             .bind(r.volume)
             .execute(&mut trans).await
             .into_report()
-            .change_context(GetRawDataError::DatavaseUpsert)
+            .change_context(DatabaseUpsertError)
             .attach("Failed to upsert value into database.")?;
         log::info!("`{}` rows were updated.", urows.rows_affected());
     }
@@ -108,12 +108,12 @@ async fn upsert_in_database(pool: sqlx::PgPool, rows: Vec<FinancialDataReport>) 
     log::trace!("Committing upsert transaction.");
     trans.commit().await
         .into_report()
-        .change_context(GetRawDataError::DatavaseUpsert)
+        .change_context(DatabaseUpsertError)
         .attach("Failed to commit transaction on Postgres database.")
 }
 
 /// Queries Alpha Vantage API and upserts into database
-pub async fn get_raw_data(pool: sqlx::PgPool, api_key: String) -> Result<(), GetRawDataError> {
+pub async fn get_raw_data(pool: sqlx::PgPool, api_key: String) -> Result<(), DatabaseUpsertError> {
     log::trace!("Querying AlphaVantage");
     let ibm = query_alpha_vantage(&api_key, "IBM").await?;
     let aapl = query_alpha_vantage(&api_key, "AAPL").await?;
@@ -133,7 +133,7 @@ pub async fn recurring_get_raw_data(
     mut stop_channel: Receiver<()>,
     api_key: String,
     days: i64
-) -> Result<(), GetRawDataError> {
+) -> Result<(), DatabaseUpsertError> {
     log::trace!("Collecting current time and initializing interval.");
     let mut last_exec = time::OffsetDateTime::now_utc();
     let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(5));
@@ -152,7 +152,7 @@ pub async fn recurring_get_raw_data(
         match stop_signal {
             Ok(_) => break,
             Err(tokio::sync::oneshot::error::TryRecvError::Empty) => { interval.tick().await; },
-            Err(tokio::sync::oneshot::error::TryRecvError::Closed) => return Err(GetRawDataError::DatavaseUpsert).into_report()
+            Err(tokio::sync::oneshot::error::TryRecvError::Closed) => return Err(DatabaseUpsertError).into_report()
                 .attach("Recurring task was disconnected from it's channel"),  
         }
     }
