@@ -142,7 +142,7 @@ pub async fn recurring_get_raw_data(
         if now.cmp(&last_exec).is_ge() {
             log::trace!("Daily quering of Alpha Vantage API.");
             match get_raw_data(pool.clone(), api_key.clone()).await {
-                Ok(_) => { last_exec = last_exec + time::Duration::days(days);},
+                Ok(_) => { last_exec += time::Duration::days(days); },
                 Err(err) => { log::error!("{}", err); }
             };
         }

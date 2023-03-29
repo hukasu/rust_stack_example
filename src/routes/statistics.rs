@@ -13,7 +13,7 @@ use crate::{model::{ResponseInfo, StatisticsQuery, StatisticsReport, StatisticsR
 /// * `end_date` => Filters out dates later than this date.
 pub async fn statistics(
     mut db: axum_sqlx_tx::Tx<sqlx::Postgres>,
-    Query(query): Query<StatisticsQuery>
+    Query(StatisticsQuery {symbol, start_date, end_date}): Query<StatisticsQuery>
 ) -> Result<Json<StatisticsResponse>, ResponseError<RouteError>> {
     log::trace!("Received request to `statistics`.");
 
@@ -35,17 +35,17 @@ pub async fn statistics(
     "#;
 
     log::trace!("Querying statistics from database for a given global equity and date range.");
-    let qresult = sqlx::query_as::<_, StatisticsReport>(query_str)
-        .bind(&query.symbol)
-        .bind(&query.start_date)
-        .bind(&query.end_date)
+    let data = sqlx::query_as::<_, StatisticsReport>(query_str)
+        .bind(symbol)
+        .bind(start_date)
+        .bind(end_date)
         .fetch_optional(&mut db)
         .await.into_report()
         .change_context(RouteError("statistics"))
         .attach("Failed to query financial data on Postgres database.")?;
     
     log::trace!("Verifying that a response from the database was returned and writing a matching response.");
-    let msg = match &qresult {
+    let error = match &data {
         Some(_) => "".into(),
         None => "The query had no results. Try another date range and verify symbol is correct.".into()
     };
@@ -53,8 +53,8 @@ pub async fn statistics(
     log::trace!("Responding from `statistics` endpoint.");
     Ok(Json(
         StatisticsResponse {
-            data: qresult,
-            info: ResponseInfo { error : msg }
+            data,
+            info: ResponseInfo { error }
         }
     ))
 }

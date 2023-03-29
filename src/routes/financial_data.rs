@@ -17,7 +17,7 @@ use crate::{model::{FinancialDataResponse, FinancialDataReport, FinancialDataQue
 /// * `page`: Optional, Default=1 => Page of the response, for when the number of entries is larger than the limit.
 pub async fn financial_data(
     mut db: axum_sqlx_tx::Tx<sqlx::Postgres>,
-    Query(query): Query<FinancialDataQuery>
+    Query(FinancialDataQuery{symbol, start_date, end_date, page, limit}): Query<FinancialDataQuery>
 ) -> Result<Json<FinancialDataResponse>, ResponseError<RouteError>> {
     log::trace!("Received request to `financial_data`.");
 
@@ -31,9 +31,9 @@ pub async fn financial_data(
 
     log::trace!("Querying time series entries from database for a given global equity and date range.");
     let qresult = sqlx::query_as::<_, FinancialDataReport>(query_str)
-        .bind(query.symbol)
-        .bind(query.start_date)
-        .bind(query.end_date)
+        .bind(symbol)
+        .bind(start_date)
+        .bind(end_date)
         .fetch_all(&mut db)
         .await.into_report()
         .change_context(RouteError("financial_data"))
@@ -41,9 +41,9 @@ pub async fn financial_data(
 
     log::trace!("Setting up variables for filtering.");
     let count = qresult.len();
-    let limit = query.limit.unwrap_or(5);
+    let limit = limit.unwrap_or(5);
     // client-side is 1-indexed, server-side is 0-indexed
-    let page = match query.page.unwrap_or(1).checked_sub(1) {
+    let page = match page.unwrap_or(1).checked_sub(1) {
         Some(p) => p,
         None => return Ok(Json(
             FinancialDataResponse {
@@ -82,19 +82,19 @@ pub async fn financial_data(
     };
 
     log::trace!("Filtering database response and trimming symbol.");
-    let qres = qresult.into_iter().skip(offset).take(limit).map(
+    let data = qresult.into_iter().skip(offset).take(limit).map(
         |mut r| { r.symbol = r.symbol.trim().into(); r }
     ).collect();
 
     log::trace!("Responding from `financial_data` endpoint.");
     Ok(Json(
         FinancialDataResponse {
-            data: qres,
+            data,
             pagination: Pagination {
-                count: count,
-                page: page,
-                limit: limit,
-                pages: pages
+                count,
+                page,
+                limit,
+                pages
             },
             info: ResponseInfo { error : msg }
         }
