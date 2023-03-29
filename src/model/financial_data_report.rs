@@ -8,5 +8,5 @@ pub struct FinancialDataReport {
     pub date: time::Date,
     pub open_price: f64,
     pub close_price: f64,
-    pub volume: i32
+    pub volume: i32,
 }

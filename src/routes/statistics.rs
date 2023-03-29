@@ -1,24 +1,30 @@
-use axum::{Json, extract::Query};
+use axum::{extract::Query, Json};
 use error_stack::{IntoReport, ResultExt};
 
-use crate::{model::{ResponseInfo, StatisticsQuery, StatisticsReport, StatisticsResponse}, error::{RouteError, ResponseError}};
+use crate::{
+    error::{ResponseError, RouteError},
+    model::{ResponseInfo, StatisticsQuery, StatisticsReport, StatisticsResponse},
+};
 
 /// `statistics` endpoint.  
-/// 
+///
 /// Returns the average opening price, closing price, and volume of a given global equity for a given date range.
-/// 
+///
 /// # Query arguments
 /// * `symbol` => Which global equity to query.
 /// * `start_date` => Filters out dates earlier than this date.
 /// * `end_date` => Filters out dates later than this date.
 pub async fn statistics(
     mut db: axum_sqlx_tx::Tx<sqlx::Postgres>,
-    Query(StatisticsQuery {symbol, start_date, end_date}): Query<StatisticsQuery>
+    Query(StatisticsQuery {
+        symbol,
+        start_date,
+        end_date,
+    }): Query<StatisticsQuery>,
 ) -> Result<Json<StatisticsResponse>, ResponseError<RouteError>> {
     log::trace!("Received request to `statistics`.");
 
-    let query_str = 
-    r#"
+    let query_str = r#"
     SELECT *
     FROM (
         SELECT
@@ -40,21 +46,24 @@ pub async fn statistics(
         .bind(start_date)
         .bind(end_date)
         .fetch_optional(&mut db)
-        .await.into_report()
+        .await
+        .into_report()
         .change_context(RouteError("statistics"))
         .attach("Failed to query financial data on Postgres database.")?;
-    
-    log::trace!("Verifying that a response from the database was returned and writing a matching response.");
+
+    log::trace!(
+        "Verifying that a response from the database was returned and writing a matching response."
+    );
     let error = match &data {
         Some(_) => "".into(),
-        None => "The query had no results. Try another date range and verify symbol is correct.".into()
+        None => {
+            "The query had no results. Try another date range and verify symbol is correct.".into()
+        }
     };
 
     log::trace!("Responding from `statistics` endpoint.");
-    Ok(Json(
-        StatisticsResponse {
-            data,
-            info: ResponseInfo { error }
-        }
-    ))
+    Ok(Json(StatisticsResponse {
+        data,
+        info: ResponseInfo { error },
+    }))
 }

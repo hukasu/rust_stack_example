@@ -6,5 +6,5 @@ use super::{ResponseInfo, StatisticsReport};
 #[derive(Debug, Serialize)]
 pub struct StatisticsResponse {
     pub data: Option<StatisticsReport>,
-    pub info: ResponseInfo
+    pub info: ResponseInfo,
 }

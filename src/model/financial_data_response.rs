@@ -7,5 +7,5 @@ use super::{FinancialDataReport, Pagination, ResponseInfo};
 pub struct FinancialDataResponse {
     pub data: Vec<FinancialDataReport>,
     pub pagination: Pagination,
-    pub info: ResponseInfo
+    pub info: ResponseInfo,
 }

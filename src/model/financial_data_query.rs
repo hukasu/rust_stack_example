@@ -7,5 +7,5 @@ pub struct FinancialDataQuery {
     pub start_date: Option<time::Date>,
     pub end_date: Option<time::Date>,
     pub page: Option<usize>,
-    pub limit: Option<usize>
+    pub limit: Option<usize>,
 }

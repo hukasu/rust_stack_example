@@ -9,5 +9,5 @@ pub struct StatisticsReport {
     pub end_date: time::Date,
     pub average_daily_open_price: f64,
     pub average_daily_close_price: f64,
-    pub average_daily_volume: f64
+    pub average_daily_volume: f64,
 }

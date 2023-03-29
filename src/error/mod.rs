@@ -15,9 +15,26 @@ use axum::response::IntoResponse;
 use error_stack::Report;
 
 #[derive(Debug)]
-pub struct ResponseError<T>(pub Report<T>) where T: IntoResponse + error_stack::Context + std::fmt::Display + std::marker::Sync + std::marker::Send + Copy + 'static;
+pub struct ResponseError<T>(pub Report<T>)
+where
+    T: IntoResponse
+        + error_stack::Context
+        + std::fmt::Display
+        + std::marker::Sync
+        + std::marker::Send
+        + Copy
+        + 'static;
 
-impl<T> IntoResponse for ResponseError<T> where T: IntoResponse + error_stack::Context + std::fmt::Display + std::marker::Sync + std::marker::Send + Copy + 'static {
+impl<T> IntoResponse for ResponseError<T>
+where
+    T: IntoResponse
+        + error_stack::Context
+        + std::fmt::Display
+        + std::marker::Sync
+        + std::marker::Send
+        + Copy
+        + 'static,
+{
     fn into_response(self) -> axum::response::Response {
         log::error!("{:?}", self.0);
         let inner = self.0.current_context();
@@ -25,7 +42,16 @@ impl<T> IntoResponse for ResponseError<T> where T: IntoResponse + error_stack::C
     }
 }
 
-impl<T> From<Report<T>> for ResponseError<T> where T: IntoResponse + error_stack::Context + std::fmt::Display + std::marker::Sync + std::marker::Send + Copy + 'static {
+impl<T> From<Report<T>> for ResponseError<T>
+where
+    T: IntoResponse
+        + error_stack::Context
+        + std::fmt::Display
+        + std::marker::Sync
+        + std::marker::Send
+        + Copy
+        + 'static,
+{
     fn from(value: Report<T>) -> Self {
         ResponseError(value)
     }
