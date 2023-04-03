@@ -19,5 +19,14 @@ serde_json = "1.0.94"
 reqwest = { version = "0.11.15", features = ["blocking", "json"] }
 csv = "1.2.1"
 
+[dev-dependencies]
+criterion = "0.4.0"
+rayon = "1.7.0"
+
+[[bench]]
+name = "requests_bench"
+harness = false
+
 [profile.release]
 lto = true
+codegen-units = 1
