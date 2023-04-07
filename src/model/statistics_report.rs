@@ -1,8 +1,8 @@
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 use sqlx::FromRow;
 
 /// Statistics from a global equity within a date range.
-#[derive(Debug, Serialize, FromRow)]
+#[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct StatisticsReport {
     pub symbol: String,
     pub start_date: time::Date,

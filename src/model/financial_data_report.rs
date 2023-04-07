@@ -1,8 +1,8 @@
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 use sqlx::FromRow;
 
 /// Single entry on the time series.
-#[derive(Debug, Serialize, FromRow)]
+#[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct FinancialDataReport {
     pub symbol: String,
     pub date: time::Date,
