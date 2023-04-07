@@ -1,8 +1,14 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use rayon::prelude::{ParallelBridge, ParallelIterator};
+use rust_stack_example::model::{FinancialDataResponse, StatisticsResponse};
 
 fn make_request(client: &reqwest::blocking::Client, endpoint: &str, symbol: &str, start_date: &time::Date, end_date: &time::Date) {
-    client.get(format!("http://127.0.0.1:8080/api/{endpoint}?symbol={symbol}&start_date={start_date}&end_date={end_date}")).send().unwrap();
+    let resp = client.get(format!("http://127.0.0.1:8080/api/{endpoint}?symbol={symbol}&start_date={start_date}&end_date={end_date}")).send().unwrap();
+    match endpoint {
+        "financial_data" => { resp.json::<FinancialDataResponse>().unwrap(); },
+        "statistics" => { resp.json::<StatisticsResponse>().unwrap(); },
+        _ => panic!("Unknown endpoint")
+    };
 }
 
 fn executor(
