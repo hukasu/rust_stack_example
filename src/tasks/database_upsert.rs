@@ -131,12 +131,30 @@ async fn upsert_in_database(
 /// Queries Alpha Vantage API and upserts into database
 pub async fn get_raw_data(pool: sqlx::PgPool, api_key: String) -> Result<(), DatabaseUpsertError> {
     log::trace!("Querying AlphaVantage");
-    let ibm = query_alpha_vantage(&api_key, "IBM").await?;
-    let aapl = query_alpha_vantage(&api_key, "AAPL").await?;
-    let rows = [ibm, aapl].into_iter().flatten().collect();
-
+    //NOTE You need a premium API key for more than 5 requests/minute  see https://www.alphavantage.co/premium/
+    let names: Vec<&str> = vec!["TSLA", "NVDA", "MSFT", "AAPL", "IBM", "GOOGL", "AMZN", "AMD",
+                                "GOOGA", "BABA", "NOK", "COST", "XOM", "UNH", "JNJ", "NFLX", "ABNB",
+                                "SCHW", "AIC", "LLY", "MU", "CRM", "BA", "BAC", "JPM", "PFE", "PHG",
+                                "CVX", "V", "INTC", "HD", "AVGO", "WMT", "WFC", "ABBV", "ORCL", "CAT",
+                                "FDX", "MA", "VZ", "PG", "NOW", "PYPL", "MRK", "SQ", "CMCSA", "CSCO",
+                                "INTU", "COIN", "AMAT", "META", "C", "DZSI","FLEX","CVX","FANG"];
+    let mut symbols: Vec<FinancialDataReport> = vec![];
+    let mut ctr = 0;
+    for tkr in names {
+        let _sym = match query_alpha_vantage(&api_key, tkr).await {
+            Ok(_sym) => {
+                for tmp in _sym {
+                    symbols.push(tmp)
+                }
+            }
+            Err(_) => {
+                log::trace!("Failed query on symbol #`{}` ",ctr);
+            }
+        };
+        ctr += 1;
+    }
     log::trace!("Saving values into database");
-    upsert_in_database(pool, rows).await
+    upsert_in_database(pool, symbols).await
 }
 
 /// Creates a recurring task to collect data from Alpha Vantage and upserts into the database.
