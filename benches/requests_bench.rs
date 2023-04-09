@@ -2,7 +2,7 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use rayon::prelude::{ParallelBridge, ParallelIterator};
 
 fn make_request(client: &reqwest::blocking::Client, endpoint: &str, symbol: &str, start_date: &time::Date, end_date: &time::Date) {
-    client.get(format!("http://127.0.0.1:8080/api/{endpoint}?symbol={symbol}&start_date={start_date}&end_date={end_date}")).send().unwrap();
+    client.get(format!("http://127.0.0.1:8881/api/{endpoint}?symbol={symbol}&start_date={start_date}&end_date={end_date}")).send().unwrap();
 }
 
 fn executor(
