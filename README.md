@@ -1,6 +1,6 @@
 # Project Stack Example
-This project is an example of how to setup a stack containing a database and an server application.  
-The stack is comprised [PostgreSQL](https://www.postgresql.org/) for the database, and a [Axum](https://docs.rs/axum/latest/axum/) application.  
+This project is an example Rust stack containing a database and  server application.  
+The stack is comprised [PostgreSQL](https://www.postgresql.org/) for the database, and the [Axum](https://docs.rs/axum/latest/axum/) web application framework.  
 
 ## Setting Up and Running
 When running locally, fill-in the `.env` file, the `POSTGRES_PASSWORD` is the password that Postgres will use, the `ALPHA_VANTAGE_API_KEY` is the key that will be used to make requests to the [AlphaVantage Stock API](https://www.alphavantage.co/), a free key can be requested [here](https://www.alphavantage.co/support/#api-key). An example of `.env` is available as `.env.example`. `POSTGRES_HOST`, `POSTGRES_USER`, and `POSTGRES_DBNAME` are exposed for further customization, but the default value of `postgres` can be used.  
