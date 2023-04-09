@@ -43,7 +43,7 @@ Recovers the `symbol` (name of the equity), `date`, `open_price`, `close_price` 
 * `limit`: (Optional, Default=5) Limit the number of items in the response.
 * `page`: (Optional, Default=1) Get the page of number `page` for results that go over the limit.
 #### Example
-[http://localhost:8881/api/financial_data?start_date=2023-02-01&end_date=2023-02-28&symbol=IBM&limit=5&page=1](http://localhost:8080/api/financial_data?start_date=2023-02-01&end_date=2023-02-28&symbol=IBM&limit=5&page=1)  
+[http://localhost:8881/api/financial_data?start_date=2023-04-01&end_date=2023-04-078&symbol=IBM&limit=5&page=1](http://localhost:8881/api/financial_data?start_date=2023-04-01&end_date=2023-04-07&symbol=IBM&limit=5&page=1)  
 **Note**: An empty response might mean that the dates are too old for when you are  
 
 ### ✧ `statistics`  
@@ -53,7 +53,7 @@ Recovers the `symbol` (name of the equity), `start_date`, `end_date`, `average_d
 * `start_date`: Filters dates that are earlier than this.
 * `end_date`: Filters dates that are later than this.
 #### Example
-[http://localhost:8881/api/statistics?start_date=2023-02-01&end_date=2023-03-02&symbol=IBM](http://localhost:8080/api/statistics?start_date=2023-02-01&end_date=2023-02-28&symbol=IBM)  
+[http://localhost:8881/api/statistics?start_date=2023-04-01&end_date=2023-04-07&symbol=IBM](http://localhost:8881/api/statistics?start_date=2023-04-01&end_date=2023-04-07&symbol=IBM)  
 **Note**: An empty response might mean that the dates are too old for when you are  
 
 ## Security
