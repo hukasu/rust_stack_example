@@ -1,15 +1,27 @@
-FROM rust:alpine as setup
+FROM rust:alpine as chef
 
 ENV CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
 ENV OPENSSL_LIB_DIR=/usr/lib/
 ENV OPENSSL_INCLUDE_DIR=/usr/include
 ENV OPENSSL_STATIC=yes
 
+RUN apk update && apk add musl-dev openssl-dev openssl-libs-static ca-certificates-bundle
+RUN cargo install cargo-chef --locked
+
+FROM chef as recipe
+
+WORKDIR /var/chef
+COPY . .
+RUN cargo chef prepare --recipe-path recipe.json
+
+FROM chef as setup
+
 WORKDIR /usr/financial/src
 
-RUN apk update && apk add musl-dev openssl-dev openssl-libs-static ca-certificates-bundle
+COPY --from=recipe /var/chef/recipe.json .
 
 RUN rustup target add x86_64-unknown-linux-musl
+RUN cargo chef cook --release --target=x86_64-unknown-linux-musl --recipe-path recipe.json
 COPY . .
 RUN cargo build --release --target=x86_64-unknown-linux-musl
 
